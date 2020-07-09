@@ -5,13 +5,6 @@
 # Session Data files
 .RData
 
-# Compressed folders
-*.zip
-*.rar
-
-# CSV files
-*.csv
-
 # Images
 *.eps
 *.png
