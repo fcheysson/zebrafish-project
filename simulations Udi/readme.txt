@@ -1,0 +1,1 @@
+First extract all the data in folder data/.

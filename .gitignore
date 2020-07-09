@@ -1,0 +1,25 @@
+# History files 
+.Rhistory
+.Rapp.history
+
+# Session Data files
+.RData
+
+# Compressed folders
+*.zip
+*.rar
+
+# CSV files
+*.csv
+
+# Images
+*.eps
+*.png
+*.jpg
+*.jpeg
+
+# Docs
+*.doc
+*.docx
+*.html
+*.pdf
