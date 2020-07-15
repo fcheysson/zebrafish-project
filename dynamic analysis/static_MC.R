@@ -35,7 +35,8 @@ for (fish in names) {
     setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
     
     # Rescale to cell diameter
-    cells.diameter = plist %>% sapply(function(p) mean(nndist(p))) %>% mean()
+    # cells.diameter = plist %>% sapply(function(p) mean(nndist(p))) %>% mean()
+    cells.diameter = plist %>% sapply(function(p) 2 * sqrt(area(Window(p)) / (pi * npoints(p)))) %>% mean()
     plist = plist %>% solapply(function(p) rescale(X=p, s=cells.diameter, unitname="cell diameter"))
     
     path.to.image = paste0("_images_static/MC/", fish, "/")

@@ -75,7 +75,8 @@ for (simulation in simulations) {
     })
     
     # Rescale to cell diameter
-    cells.diameter = cellPatterns %>% sapply(function(p) mean(nndist(p))) %>% mean()
+    # cells.diameter = cellPatterns %>% sapply(function(p) mean(nndist(p))) %>% mean()
+    cells.diameter = cellPatterns %>% sapply(function(p) 2 * sqrt(area(Window(p)) / (pi * npoints(p)))) %>% mean()
     
     # Which timestep to use
     timeSteps = c(400, 450, 500, 550, 600)

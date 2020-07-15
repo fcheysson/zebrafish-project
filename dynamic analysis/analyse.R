@@ -71,7 +71,8 @@ for (fish in names) {
     setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
     
     # Rescale to cell diameter
-    cells.diameter = plist %>% sapply(function(p) mean(nndist(p))) %>% mean()
+    # cells.diameter = plist %>% sapply(function(p) mean(nndist(p))) %>% mean()
+    cells.diameter = plist %>% sapply(function(p) 2 * sqrt(area(Window(p)) / (pi * npoints(p)))) %>% mean()
     plist = plist %>% solapply(function(p) rescale(X=p, s=cells.diameter, unitname="cell diameter"))
     
     # # Compute density of whole pattern
@@ -852,7 +853,7 @@ grid.table(
             !str_detect(stat, "[gM]\\.dclf"),
             !str_detect(stat, "[gM]\\.simult"),
             !str_detect(stat, "\\.pointwise[5,6]"),
-            !str_detect(stat, ".dclf[1,2]")
+            !str_detect(stat, ".dclf[1,6]")
         )
 )
 dev.off()

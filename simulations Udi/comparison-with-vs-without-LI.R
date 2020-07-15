@@ -68,7 +68,8 @@ for (gr in 1L:length(groups)) {
         cellPatterns = solapply(availableTimeSteps, function(image) {
             cells %>% filter(timeStep == image) %>% {ppp(x = .$x, y = .$y, window = cellWindow, marks = .$type)}
         })
-        cells.diameter = cellPatterns %>% sapply(function(p) mean(nndist(p))) %>% mean()
+        # cells.diameter = cellPatterns %>% sapply(function(p) mean(nndist(p))) %>% mean()
+        cells.diameter = cellPatterns %>% sapply(function(p) 2 * sqrt(area(Window(p)) / (pi * npoints(p)))) %>% mean()
         
         # Pool each 3 consecutive time steps and keep only MC
         timeStepMin = cells %>% pull(timeStep) %>% min()

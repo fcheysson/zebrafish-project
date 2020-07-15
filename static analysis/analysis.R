@@ -43,7 +43,8 @@ for (import in seq_along(imports.dir)) {
            plot = g, device="ps", width=12, height=8, units="in")
 
     # Rescale to cell diameter
-    cells.diameter = mean(nndist(p))
+    # cells.diameter = mean(nndist(p))
+    cells.diameter = 2 * sqrt(area(Window(p)) / (pi * npoints(p)))
     p = rescale(X=p, s=cells.diameter, unitname="cell diameter")
     cells.mindist = min(nndist(p))
     

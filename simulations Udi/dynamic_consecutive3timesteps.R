@@ -100,7 +100,8 @@ for (simulation in simulations) {
     pval.it = 1
     
     # Rescale to cell diameter
-    cells.diameter = plist %>% sapply(function(p) mean(nndist(p))) %>% mean()
+    # cells.diameter = plist %>% sapply(function(p) mean(nndist(p))) %>% mean()
+    cells.diameter = cellPatterns %>% sapply(function(p) 2 * sqrt(area(Window(p)) / (pi * npoints(p)))) %>% mean()
     plist = plist %>% solapply(function(p) rescale(X=p, s=cells.diameter, unitname="cell diameter"))
     
     for (delta in deltas) {
