@@ -1,5 +1,5 @@
 # Spatial (non temporal) analysis of the simulations from the NSC lattice model
-# Fig.4E, Supp. Fig.12
+# Fig.6E'', E'''
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 

@@ -1,5 +1,5 @@
 # Spatio-temporal analysis of MCs in movies
-# Fig.3E-E", Supp. Fig.8, Supp. Fig.9
+# Fig.5B
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 

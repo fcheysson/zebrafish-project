@@ -1,5 +1,5 @@
 # Spatial (non temporal) analysis of aNSCs in movies
-# Supp. Fig.6A,B
+# Fig.4A,B
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 

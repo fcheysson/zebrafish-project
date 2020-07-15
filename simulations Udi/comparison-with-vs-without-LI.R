@@ -1,6 +1,6 @@
 # Studentized permutation test (Hahn, 2012) to compare the interaction between MCs 
 # with and without aNP-driven LI
-# Fig.4F, Supp. Fig.13B
+# Fig.7B
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 

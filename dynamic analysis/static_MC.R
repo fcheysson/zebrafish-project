@@ -1,5 +1,5 @@
 # Spatial (non temporal) analysis of MCs in movies
-# Supp. Fig.6A,C
+# Fig.4A,C
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 

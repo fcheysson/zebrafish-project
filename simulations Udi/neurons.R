@@ -1,6 +1,6 @@
 # Studentized permutation test (Hahn, 2012) to compare the 2D interaction between neurons 
 # with and without aNP-driven LI
-# Supp. Fig.14
+# Fig.7D
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 

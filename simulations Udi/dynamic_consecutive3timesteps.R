@@ -1,4 +1,5 @@
 # Spatio-temporal analysis of MCs in the simulations from the NSC lattice model
+# Fig.7A
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
