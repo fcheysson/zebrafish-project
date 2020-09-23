@@ -16,3 +16,6 @@
 *.docx
 *.html
 *.pdf
+
+# Things I don't care about
+.DS_Store

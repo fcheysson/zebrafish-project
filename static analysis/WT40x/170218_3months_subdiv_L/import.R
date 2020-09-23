@@ -6,6 +6,7 @@ library(tidyverse)
 library(spatstat)
 library(plotly)
 library(dbmss)
+library(clue)
 
 insertRow <- function(existingDF, newrow, r) {
     if (r < nrow(existingDF))
@@ -15,22 +16,38 @@ insertRow <- function(existingDF, newrow, r) {
 }
 
 cells1 = read.table("qNSC.csv", header=FALSE, sep=",", col.names=c("x", "y", "z")) %>% 
-    as_tibble() %>% mutate(type=1)
+    as_tibble() %>% mutate(type="qNSC")
 cells2 = read.table("aNSC_nodb.csv", header=FALSE, sep=",", col.names=c("x", "y", "z")) %>% 
-    as_tibble() %>% mutate(type=2)
+    as_tibble() %>% mutate(type="aNSC_nodb")
 cells3 = read.table("aNP.csv", header=FALSE, sep=",", col.names=c("x", "y", "z")) %>% 
-    as_tibble() %>% mutate(type=3)
+    as_tibble() %>% mutate(type="aNP")
 
-cells = cells1 %>% bind_rows(cells2) %>% bind_rows(cells3) %>% mutate(type=as.factor(type))
+# Replace doublets by mean singlets
+cellsA = read.table("out.csv", header=FALSE, sep=",", col.names=c("x", "y", "z")) %>% 
+    as_tibble() %>% mutate(type = "aNSC_db")
+distMat = pairdist(cellsA[, c('x', 'y')])
+diag(distMat) = rep(1e6, nrow(cellsA))
+doublets = as.numeric(solve_LSAP(distMat))
+cellsB = cellsA %>%
+    mutate(x = .5 * (x + x[doublets]), 
+           y = .5 * (y + y[doublets]), 
+           z = .5 * (z + z[doublets])) %>% 
+    distinct() %>% 
+    mutate(type = "aNSC_db2sg")
 
-# plot_ly(x=cells$x, y=cells$y, z=cells$z, type="scatter3d", mode="markers", color=cells$type) %>%
+cells = cells1 %>% bind_rows(cells2) %>% bind_rows(cells3) %>% 
+    bind_rows(cellsA) %>% bind_rows(cellsB) %>% mutate(type=as.factor(type))
+
+# plot_ly(x=cells$x, y=cells$y, z=cells$z, type="scatter3d", mode="markers", color=cells$type) %>% 
 #     layout(scene=list(aspectmode="data"))
-# plot_ly(x=cells$x, y=cells$y, type="scatter", mode="markers", color=cells$type) %>%
+# plot_ly(x=cells$x, y=cells$y, type="scatter", mode="markers", color=cells$type) %>% 
 #     layout(scene=list(aspectmode="data"))
 
 n1 = nrow(cells1)
 n2 = nrow(cells2)
 n3 = nrow(cells3)
+nA = nrow(cellsA)
+nB = nrow(cellsB)
 
 xrange = range(cells$x)
 yrange = range(cells$y)
