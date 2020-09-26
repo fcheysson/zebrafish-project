@@ -36,7 +36,10 @@ cellsB = cellsA %>%
     mutate(type = "aNSC_db2sg")
 
 cells = cells1 %>% bind_rows(cells2) %>% bind_rows(cells3) %>% 
-    bind_rows(cellsA) %>% bind_rows(cellsB) %>% mutate(type=as.factor(type))
+    bind_rows(cellsA) %>% bind_rows(cellsB) %>% 
+    mutate(type=factor(type, levels = c("qNSC", "aNSC_nodb", "aNSC_db", "aNSC_db2sg", "aNP")))
+geomCells = cells %>% filter(type %in% c("qNSC", "aNSC_nodb", "aNSC_db2sg", "aNP")) %>% 
+    mutate(type = factor(ifelse(type == "aNP", "aNP", ifelse(type == "qNSC", "qNSC", "aNSC")))) 
 
 # plot_ly(x=cells$x, y=cells$y, z=cells$z, type="scatter3d", mode="markers", color=cells$type) %>% 
 #     layout(scene=list(aspectmode="data"))
@@ -44,16 +47,16 @@ cells = cells1 %>% bind_rows(cells2) %>% bind_rows(cells3) %>%
 #     layout(scene=list(aspectmode="data"))
 
 n1 = nrow(cells1)
-n2 = nrow(cells2)
+n2 = nrow(cells2) + nrow(cellsB)
 n3 = nrow(cells3)
-nA = nrow(cellsA)
-nB = nrow(cellsB)
+n2a = nrow(cells2)
+n2b = nrow(cellsB)
 
 xrange = range(cells$x)
 yrange = range(cells$y)
 zrange = range(cells$z)
 
-p = ppp(cells$x, cells$y, xrange, yrange, marks=cells$type)
+p = ppp(geomCells$x, geomCells$y, xrange, yrange, marks=geomCells$type)
 Window(p) = ripras(p)
 unitname(p) = "µm"
 
