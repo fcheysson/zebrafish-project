@@ -314,10 +314,10 @@ for (import in seq_along(imports.dir)) {
         fish = imports.dir[import],
         test = c("aNSC-aNSC", "aNP-aNP", "aNP-aNSC", "aNSC_db2sg-aNSC_nodb"),
         pval = c(
-            mad.test(EL2.simultaneous)$p.value,
-            mad.test(EL3.simultaneous)$p.value,
-            mad.test(EL32.simultaneous)$p.value,
-            mad.test(EL2ab.simultaneous)$p.value
+            mad.test(EL2.simultaneous, rinterval = c(cells.mindist, 2))$p.value,
+            mad.test(EL3.simultaneous, rinterval = c(cells.mindist, 2))$p.value,
+            mad.test(EL32.simultaneous, rinterval = c(cells.mindist, 2))$p.value,
+            mad.test(EL2ab.simultaneous, rinterval = c(cells.mindist, 2))$p.value
         )
     )
     
@@ -330,3 +330,12 @@ for (import in seq_along(imports.dir)) {
 
 save(pval, file = "pval.RData")
 save(diam, file = "cells_diameter.RData")
+
+pdf("pval.pdf", height=4, width=5)
+gridExtra::grid.table(
+    pval %>% bind_rows() %>% separate(fish, c(NA, "fishType", "fish"), sep = "/") %>% 
+        group_by(fishType, test) %>% add_tally() %>% 
+        summarise(pval.pooled = 1 - pchisq(-2 * sum(log(pval)), df = 2 * n()))
+)
+dev.off()
+    
