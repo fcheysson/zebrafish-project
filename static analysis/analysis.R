@@ -102,11 +102,17 @@ for (import in seq_along(imports.dir)) {
 save(pval, file = "pval.RData")
 save(diam, file = "cells_diameter.RData")
 
-pdf("pval.pdf", height=4, width=5)
+pdf("pval.pdf", height=6, width=5)
 gridExtra::grid.table(
     pval %>% bind_rows() %>% separate(fish, c(NA, "fishType", "fish"), sep = "/") %>% 
         group_by(fishType, test) %>% add_tally() %>% 
         summarise(pval.pooled = 1 - pchisq(-2 * sum(log(pval)), df = 2 * n()))
 )
 dev.off()
-    
+
+pdf("pval_all.pdf", height=4, width=15)
+gridExtra::grid.table(
+    pval %>% bind_rows() %>% separate(fish, c(NA, "fishType", "fish"), sep = "/") %>% 
+        spread(test, pval)
+)
+dev.off()  
