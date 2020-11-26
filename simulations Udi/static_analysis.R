@@ -20,8 +20,8 @@ n.sim1 = 499
 n.sim2 = 500
 n.sim = n.sim1 + n.sim2
 
-model = "Positions_withLI_f059_simulation"
-simulations = 1L:18L
+model = "Positions_20200921_withLI_f059_lowPERaNSC_02_simulation"
+simulations = 1L:16L
 n.test = length(simulations)
 pval = tibble(simulation = numeric(n.test), 
               L22.simult = numeric(n.test),
@@ -66,7 +66,7 @@ for (simulation in simulations) {
     cellWindow = ripras(x = cells$x, y = cells$y, shape = "rectangle", f = (meanPointsPerTimeStep + 1) / (meanPointsPerTimeStep - 1))
     
     # CREATE SOLIST
-    availableTimeSteps = cells %>% pull(timeStep) %>% unique() %>% {.[.>=500]}
+    availableTimeSteps = cells %>% pull(timeStep) %>% unique() %>% {.[.>=400]}
     timeStepCount = availableTimeSteps %>% range() %>% {.[2] - .[1] + 1}
     cellPatterns = solapply(availableTimeSteps, function(image) {
         cells %>% 
@@ -79,7 +79,12 @@ for (simulation in simulations) {
     cells.diameter = cellPatterns %>% sapply(function(p) 2 * sqrt(area(Window(p)) / (pi * npoints(p)))) %>% mean()
     
     # Which timestep to use
-    timeSteps = c(400, 450, 500, 550, 600)
+    timeSteps = c(400, 433, 467, 500, 533, 567, 600) %>% 
+        sapply(function(ts) {
+            if (nrow(filter(cells, timeStep == ts, type == "aNSC")) < 2)
+                return(c())
+            return(ts)
+        }) %>% unlist()  # Remove timesteps with less than 2 aNSCs
     cells = cells %>% filter(timeStep %in% timeSteps)
     
     ggplot(cells, aes(x=x, y=y)) +
@@ -331,10 +336,17 @@ for (simulation in simulations) {
     
 }
 
-pval %>% summarise_at(vars(starts_with("L")), ~ 1 - pchisq(- 2 * sum(log(.)), df = 2 * length(.)))
-
 pdf("static_pval.pdf", height=5.5, width=4.5)
 grid.table(
-    pval %>% mutate_at(vars(starts_with("L")), ~ format(round(., 3), nsmall = 3))
+    pval %>% 
+        mutate(simulation = as.character(simulation)) %>% 
+        bind_rows(
+            pval %>% 
+                summarise_at(vars(starts_with("L")), 
+                             ~ 1 - pchisq(- 2 * sum(log(.)), 
+                                          df = 2 * length(.))) %>% 
+                mutate(simulation = "pooled")
+        ) %>% 
+        mutate_at(vars(starts_with("L")), ~ format(round(., 3), nsmall = 3))
 )
 dev.off()

@@ -21,7 +21,11 @@ deltas = 1L:5L
 n.test = length(names) * length(deltas)
 pval = tibble(fish = character(n.test), 
               delta = integer(n.test), 
-              L.simult = numeric(n.test),
+              L.simult2 = numeric(n.test),
+              L.simult3 = numeric(n.test),
+              L.simult4 = numeric(n.test),
+              L.simult5 = numeric(n.test),
+              L.simult6 = numeric(n.test),
               L.pointwise1 = numeric(n.test),
               L.pointwise2 = numeric(n.test),
               L.pointwise3 = numeric(n.test),
@@ -156,13 +160,23 @@ for (fish in names) {
         }) %>% apply(1, mean)
         
         # Go for univariate testing
-        Ldeviation = sapply(1:n.sim1, function(sim) {
-            min( pmin(Lsim[[sim]]$pooliso - Lmean, 0) )
+        Ldeviation = sapply(2:6, function(rmax) {
+            imax = 1 + 10 * rmax
+            sapply(1:n.sim1, function(sim) {
+                min( pmin(Lsim[[sim]]$pooliso[1:imax] - Lmean[1:imax], 0) )
+            })
         })
         
-        Ldeviation.sorted = sort(Ldeviation, decreasing = FALSE)
-        Ldeviation.observed = min( pmin(L$pooliso - Lmean, 0) )
-        pval$L.simult[pval.it] = base::Position(function(bool) bool == FALSE, Ldeviation.sorted < Ldeviation.observed) / (n.sim1 + 1)
+        Ldeviation.sorted = apply(Ldeviation, 2, sort, decreasing = FALSE)
+        Ldeviation.observed = sapply(2:6, function(rmax) {
+            imax = 1 + 10 * rmax
+            min( pmin(L$pooliso[1:imax] - Lmean[1:imax], 0) )
+        })
+        pval$L.simult2[pval.it] = base::Position(function(bool) bool == FALSE, Ldeviation.sorted[,1] < Ldeviation.observed[1]) / (n.sim1 + 1)
+        pval$L.simult3[pval.it] = base::Position(function(bool) bool == FALSE, Ldeviation.sorted[,2] < Ldeviation.observed[2]) / (n.sim1 + 1)
+        pval$L.simult4[pval.it] = base::Position(function(bool) bool == FALSE, Ldeviation.sorted[,3] < Ldeviation.observed[3]) / (n.sim1 + 1)
+        pval$L.simult5[pval.it] = base::Position(function(bool) bool == FALSE, Ldeviation.sorted[,4] < Ldeviation.observed[4]) / (n.sim1 + 1)
+        pval$L.simult6[pval.it] = base::Position(function(bool) bool == FALSE, Ldeviation.sorted[,5] < Ldeviation.observed[5]) / (n.sim1 + 1)
         
         Lpointwise = map_dfc(1:n.sim, function(sim) {
             Lsim[[sim]]$pooliso 
@@ -841,12 +855,12 @@ for (fish in names) {
 }
 
 logna0 = function(x) ifelse(!is.na(x), log(x), 0)
-pval.byfish = gather(pval, "stat", "pvalue", L.simult:g.dclf6) %>% spread(fish, pvalue) %>% 
+pval.byfish = gather(pval, "stat", "pvalue", L.simult2:g.dclf6) %>% spread(fish, pvalue) %>% 
     mutate(pooled = 1 - pchisq(-2*(logna0(bibi) + logna0(mimi) + logna0(titi)), 
                                df = 6 - 2 * is.na(bibi) - 2 * is.na(mimi) - 2 * is.na(titi)))
 save(pval.byfish, file = "pval.RData")
 
-pdf("pval.pdf", height=25, width=6)
+pdf("pval.pdf", height=30, width=6)
 grid.table(
     pval.byfish %>%
         filter(

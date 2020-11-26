@@ -18,12 +18,12 @@ n.sim1 = 99
 n.sim2 = 100
 n.sim = n.sim1 + n.sim2
 
-simulations = 1L:34L
+simulations = 9L:16L
 deltas = 1L:5L
 n.test = length(deltas)
 
 # System path and folder manipulation
-file = "Positions_withLI_f059_simulation"
+file = "Positions_20200919_withLI_f059_highP08_simulation"
 dir.create(file)
 
 for (simulation in simulations) {

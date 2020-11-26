@@ -18,11 +18,12 @@ gg_color_hue <- function(n) {
 groups = c("2A", "2B")
 files = c("Positions_withLI_f059_simulation", 
           "Positions_withoutLI_f1_simulation")
-simulations = list(1L:34L, 1L:33L)
+simulations = list(1L:18L, 1L:18L)
 
 hyperMC = tibble(group = factor(character(0L), levels = groups),
                      simulation = integer(0L), 
                      delta = integer(0L),
+                     Leach = anylist(),
                      L = list())
 
 deltas = 1L:5L
@@ -99,6 +100,7 @@ for (gr in 1L:length(groups)) {
                         tibble(group = groups[gr], 
                                    simulation = simulation, 
                                    delta = 0L,
+                                   Leach = Leach,
                                    L = list(Lpool)))
         
         # Other deltas
@@ -133,6 +135,7 @@ for (gr in 1L:length(groups)) {
                             tibble(group = groups[gr], 
                                    simulation = simulation, 
                                    delta = delta,
+                                   Leach = Leach,
                                    L = list(Lpool)))
             
         }
@@ -200,3 +203,26 @@ grid.table(spval %>% mutate(pval = round(pval, digits = 3)) %>% spread(compariso
 dev.off()
 
 ggsave("comparison-with-without-LI.eps", device="ps", width=12, height=8, units="in")
+
+# Plots of the L-function assessing the interaction between MCs 
+# with and without aNP-driven LI
+# Fig.7B
+LpoolTib = map_dfr(0L:5L, function(delay) { 
+    map_dfr(groups, function(mgroup) {
+        hf = hyperMC %>% filter(delta == delay, group == mgroup)
+        Lpool = pool(hf$Leach)
+        tibble(group = mgroup, delta = delay, L = list(Lpool))
+    })
+})
+
+LpoolUnnest = LpoolTib %>% mutate(L = lapply(L, as.data.frame)) %>% unnest()
+
+ggplot(LpoolUnnest, 
+       aes(x=r, y=pooliso-r, ymin=loiso-r, ymax=hiiso-r, fill=group)) +
+    geom_line(aes(colour=group)) +
+    geom_ribbon(alpha=.4) +
+    ylab(TeX("$L(r) - r$")) +
+    facet_wrap(~ delta) +
+    theme_bw()
+
+ggsave("comparison-with-without-LI-ribbon.eps", device=cairo_ps, width=14, height=8, units="in")
