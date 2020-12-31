@@ -198,7 +198,7 @@ for (fish in names) {
             r = L$r,
             obs = L$pooliso,
             mmean = Lmean,
-            lo = Lmean + Ldeviation.sorted[5],
+            lo = Lmean + Ldeviation.sorted[5, 5],
             hi = Inf
         ) %>% as_tibble()
         
@@ -238,7 +238,7 @@ for (fish in names) {
             r = L$r,
             obs = L$pooliso,
             mmean = Lmean,
-            lo = Lmean + Ldeviation.sorted[25],
+            lo = Lmean + Ldeviation.sorted[25, 5],
             hi = Inf
         ) %>% as_tibble()
         

@@ -18,12 +18,12 @@ n.sim1 = 99
 n.sim2 = 100
 n.sim = n.sim1 + n.sim2
 
-simulations = 9L:16L
+simulations = 1L:18L
 deltas = 1L:5L
 n.test = length(deltas)
 
 # System path and folder manipulation
-file = "Positions_20200919_withLI_f059_highP08_simulation"
+file = "Positions_20200919_withLI_f059_highP132_simulation"
 dir.create(file)
 
 for (simulation in simulations) {
@@ -84,7 +84,8 @@ for (simulation in simulations) {
     
     pval = tibble(fish = character(n.test), 
                   delta = integer(n.test), 
-                  L.simult = numeric(n.test),
+                  L.simult2 = numeric(n.test),
+                  L.simult6 = numeric(n.test),
                   L.pointwise1 = numeric(n.test),
                   L.pointwise2 = numeric(n.test),
                   L.pointwise3 = numeric(n.test),
@@ -189,13 +190,20 @@ for (simulation in simulations) {
         }) %>% apply(1, mean)
         
         # Go for univariate testing
-        Ldeviation = sapply(1:n.sim1, function(sim) {
-            min( pmin(Lsim[[sim]]$pooliso - Lmean, 0) )
+        Ldeviation = sapply(c(2.0, 6.0), function(rmax) {
+            imax = 1 + 10 * rmax
+            sapply(1:n.sim1, function(sim) {
+                min( pmin(Lsim[[sim]]$pooliso[1L:imax] - Lmean[1L:imax], 0) )
+            })
         })
         
-        Ldeviation.sorted = sort(Ldeviation, decreasing = FALSE)
-        Ldeviation.observed = min( pmin(L$pooliso - Lmean, 0) )
-        pval$L.simult[pval.it] = 1 - sum(Ldeviation.sorted > Ldeviation.observed) / (n.sim1 + 1)
+        Ldeviation.sorted = apply(Ldeviation, 2, sort, decreasing = FALSE)
+        Ldeviation.observed = sapply(c(2.0, 6.0), function(rmax) {
+            imax = 1 + 10 * rmax
+            min( pmin(L$pooliso[1L:imax] - Lmean[1L:imax], 0) )
+        })
+        pval$L.simult2[pval.it] = 1 - sum(Ldeviation.sorted[,1] > Ldeviation.observed[1]) / (n.sim1 + 1)
+        pval$L.simult6[pval.it] = 1 - sum(Ldeviation.sorted[,2] > Ldeviation.observed[2]) / (n.sim1 + 1)
         
         Lpointwise = map_dfc(1:n.sim, function(sim) {
             Lsim[[sim]]$pooliso 
@@ -217,7 +225,7 @@ for (simulation in simulations) {
             r = L$r,
             obs = L$pooliso,
             mmean = Lmean,
-            lo = Lmean + Ldeviation.sorted[ceiling((n.sim1+1)/100)],
+            lo = Lmean + Ldeviation.sorted[ceiling((n.sim1+1)/100), 2],
             hi = Inf
         ) %>% as_tibble()
         
@@ -257,7 +265,7 @@ for (simulation in simulations) {
             r = L$r,
             obs = L$pooliso,
             mmean = Lmean,
-            lo = Lmean + Ldeviation.sorted[ceiling((n.sim1+1)/20)],
+            lo = Lmean + Ldeviation.sorted[ceiling((n.sim1+1)/20), 2],
             hi = Inf
         ) %>% as_tibble()
         
@@ -392,10 +400,10 @@ for (simulation in simulations) {
     
     save(pval, file = paste0(file, "/", file, simulation, "/pval.RData"))
     
-    pdf(paste0(file, "/", file, simulation, "/pval.pdf"), height=2, width=8)
+    pdf(paste0(file, "/", file, simulation, "/pval.pdf"), height=2, width=9)
     grid.table(
         pval %>%
-            select(delta, L.simult, matches("^L\\.pointwise[1-3]$"), matches("^L\\.dclf[3-6]$"))
+            select(delta, matches("^L\\.simult[2,6]"), matches("^L\\.pointwise[1-3]$"), matches("^L\\.dclf[3-6]$"))
     )
     dev.off()
     

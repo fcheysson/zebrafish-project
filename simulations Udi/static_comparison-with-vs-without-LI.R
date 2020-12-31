@@ -15,15 +15,19 @@ gg_color_hue <- function(n) {
     hcl(h = hues, l = 65, c = 100)[1:n]
 }
 
-groups = c("2A", "2B")
+groups = c("2A", "2B", "inc", "aNSC/", "1or01", "1or03")
 files = c("Positions_withLI_f059_simulation", 
-          "Positions_withoutLI_f1_simulation")
-simulations = list(1L:18L, 1L:18L)
+          "Positions_withoutLI_f1_simulation",
+          "Positions_20200919_withLI_f059_highP132_simulation",
+          "Positions_20200925_withoutLI_f1_divisionRate_simulation",
+          "Positions_20200923_withLI_1or01_f0631_simulation",
+          "Positions_20200923_withLI_1or03_f0713_simulation")
+simulations = list(1L:18L, 1L:18L, 1L:18L, 1L:18L, 1L:18L, 1L:18L)
 
 hyperMC = tibble(group = factor(character(0L), levels = groups),
                  simulation = integer(0L), 
                  type = character(0L),
-                 Leach = anylist(),
+                 Leach = list(),
                  L = list())
 
 for (gr in 1L:length(groups)) {
@@ -107,7 +111,7 @@ for (gr in 1L:length(groups)) {
                         tibble(group = groups[gr], 
                                simulation = simulation, 
                                type = "22",
-                               Leach = Leach,
+                               Leach = list(Leach),
                                L = list(Lpool)))
         
         ## Permutation cellules type 3
@@ -126,7 +130,7 @@ for (gr in 1L:length(groups)) {
                         tibble(group = groups[gr], 
                                simulation = simulation, 
                                type = "33",
-                               Leach = Leach,
+                               Leach = list(Leach),
                                L = list(Lpool)))
         
         ## Permutation cellules type 32
@@ -145,20 +149,21 @@ for (gr in 1L:length(groups)) {
                         tibble(group = groups[gr], 
                                simulation = simulation, 
                                type = "32",
-                               Leach = Leach,
+                               Leach = list(Leach),
                                L = list(Lpool)))
         
     }
     
 }
 
-save(hyperMC, file = "pooledFV.RData")
+# save(hyperMC, file = "pooledFV.RData")
 
 # Studentized permutation test
-spstat = function(hf, test, group1, group2) {
+spstat = function(hf, test, group1, group2, rmax = 6.0) {
+    imax = 1 + 10 * rmax
     Leach = hf %>% filter(type == test, group %in% c(group1, group2)) %>% 
         {anylapply(split(.$L, .$group), collapse.fv, same="pooltheo", different="pooliso")}
-    Ls = anylapply(Leach, function(fv) fv %>% as.matrix() %>% {.[,-1:-2]} )
+    Ls = anylapply(Leach, function(fv) fv %>% as.matrix() %>% {.[1L:imax,-1:-2]} )
     Lmean = anylapply(Ls, function(mat) apply(mat, 1, mean))
     Lvar = anylapply(Ls, function(mat) apply(mat, 1, var))
     T = (Leach[[1]]$r[2] - Leach[[1]]$r[1]) * 
@@ -166,7 +171,7 @@ spstat = function(hf, test, group1, group2) {
     return(T)
 }
 
-sptest = function(hf, tests = c("22", "33", "32"), group1, group2, nperm = 999) {
+sptest = function(hf, tests = c("22", "33", "32"), group1, group2, rmax = 6.0, nperm = 999) {
     spvalues = tibble(type = character(0), pval = numeric(0))
     for (test in tests) {
         cat(test, ". ", sep = "")
@@ -174,7 +179,7 @@ sptest = function(hf, tests = c("22", "33", "32"), group1, group2, nperm = 999) 
         for (k in 1:nperm) {
             sampled = hf %>% filter(type == test)
             sampled$L = sampled$L[sample(nrow(sampled), nrow(sampled))]
-            Tvalues[k] = spstat(sampled, test, group1, group2)
+            Tvalues[k] = spstat(sampled, test, group1, group2, rmax)
         }
         
         spvalues = bind_rows(spvalues, 
@@ -184,9 +189,11 @@ sptest = function(hf, tests = c("22", "33", "32"), group1, group2, nperm = 999) 
     return(spvalues)
 }
 
-spval = map_dfr("2B", function(group2) {
-    sptest(hyperMC, group1 = "2A", group2 = group2) %>% 
-        mutate(comparison = paste("2A", group2, sep = "-"))
+spval = map2_dfr(c("2A", "2A", "2B"), 
+                 c("2B", "aNSC/", "aNSC/"),
+                 function(group1, group2) {
+    sptest(hyperMC, group1 = group1, group2 = group2, rmax = 2.0) %>% 
+        mutate(comparison = paste(group1, group2, sep = "-"))
 })
 
 Ltib = function(test) {
@@ -206,7 +213,7 @@ ggplot(Ltibble, aes(x=r, y=pooliso-r, colour=group, group=sim)) +
     facet_wrap(~ type) +
     theme_bw()
 
-pdf("comparison-with-without-LI-pval.pdf", height=2, width=1.5)
+pdf("comparison-with-without-LI-pval.pdf", height=1.5, width=6.5)
 grid.table(spval %>% mutate(pval = round(pval, digits = 3)) %>% spread(comparison, pval))
 dev.off()
 
@@ -217,8 +224,8 @@ ggsave("comparison-with-without-LI.eps", device="ps", width=12, height=8, units=
 # Fig.7B
 LpoolTib = map_dfr(c("22", "33", "32"), function(test) { 
     map_dfr(groups, function(mgroup) {
-        hf = hyperMC %>% filter(type == test, group == mgroup)
-        Lpool = pool(hf$Leach)
+        hf = hyperMC %>% filter(type == test, group == mgroup) %>% select(-L) %>% unnest(Leach)
+        Lpool = pool(as.anylist(hf$Leach))
         tibble(group = mgroup, type = test, L = list(Lpool))
     })
 })
@@ -230,6 +237,8 @@ ggplot(LpoolUnnest,
     geom_line(aes(colour=group)) +
     geom_ribbon(alpha=.4) +
     ylab(TeX("$L(r) - r$")) +
+    scale_colour_manual(values = gg_color_hue(3)[c(1, 3, 2)]) +
+    scale_fill_manual(values = gg_color_hue(3)[c(1, 3, 2)]) +
     facet_wrap(~ type) +
     theme_bw()
 

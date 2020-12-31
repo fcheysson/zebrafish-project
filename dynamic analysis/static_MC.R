@@ -23,7 +23,8 @@ n.sim = n.sim1 + n.sim2
 
 n.test = length(names)
 pval = tibble(fish = character(n.test), 
-              L.simult = numeric(n.test))
+              L.simult2 = numeric(n.test),
+              L.simult6 = numeric(n.test))
 pval.it = 1
 
 for (fish in names) {
@@ -101,20 +102,27 @@ for (fish in names) {
     }) %>% apply(1, mean)
     
     # Go for bivariate testing
-    Ldeviation = sapply(1:n.sim1, function(sim) {
-        max( abs(Lsim[[sim]]$pooliso - Lmean) )
+    Ldeviation = sapply(c(2.0, 6.0), function(rmax) {
+        imax = 1 + 10 * rmax
+        sapply(1:n.sim1, function(sim) {
+            max( abs(Lsim[[sim]]$pooliso[1L:imax] - Lmean[1L:imax]) )
+        })
     })
     
-    Ldeviation.sorted = sort(Ldeviation, decreasing = TRUE)
-    Ldeviation.observed = max( abs(L$pooliso - Lmean) )
-    pval$L.simult[pval.it] = 1 - sum(Ldeviation.sorted < Ldeviation.observed) / (n.sim1 + 1)
+    Ldeviation.sorted = apply(Ldeviation, 2, sort, decreasing = TRUE)
+    Ldeviation.observed = sapply(c(2.0, 6.0), function(rmax) {
+        imax = 1 + 10 * rmax
+        max( abs(L$pooliso[1L:imax] - Lmean[1L:imax]) )
+    })
+    pval$L.simult2[pval.it] = 1 - sum(Ldeviation.sorted[,1] < Ldeviation.observed[1]) / (n.sim1 + 1)
+    pval$L.simult6[pval.it] = 1 - sum(Ldeviation.sorted[,2] < Ldeviation.observed[2]) / (n.sim1 + 1)
     
     EL.simultaneous = list(
         r = L$r,
         obs = L$pooliso,
         mmean = Lmean,
-        lo = Lmean - Ldeviation.sorted[5],
-        hi = Lmean + Ldeviation.sorted[5]
+        lo = Lmean - Ldeviation.sorted[5, 2],
+        hi = Lmean + Ldeviation.sorted[5, 2]
     ) %>% as_tibble()
     
     ggplot(EL.simultaneous, aes(x=r)) +
@@ -133,8 +141,8 @@ for (fish in names) {
         r = L$r,
         obs = L$pooliso,
         mmean = Lmean,
-        lo = Lmean - Ldeviation.sorted[25],
-        hi = Lmean + Ldeviation.sorted[25]
+        lo = Lmean - Ldeviation.sorted[25, 2],
+        hi = Lmean + Ldeviation.sorted[25, 2]
     ) %>% as_tibble()
     
     ggplot(EL.simultaneous, aes(x=r)) +
@@ -154,4 +162,17 @@ for (fish in names) {
     
 }
 
-save(pval, file = "static_pval_MC.RData")
+pdf(paste0("pval_MC-MC.pdf"), height=2, width=3)
+gridExtra::grid.table(
+    bind_rows(pval, pval %>% 
+                  gather("Test", "pval", L.simult2:L.simult6) %>% 
+                  group_by(Test) %>% 
+                  summarise(sum.pval = sum(log(pval))) %>% 
+                  mutate(pooled = 1 - pchisq(-2*sum.pval, df = 2*3)) %>% 
+                  select(-sum.pval) %>% 
+                  spread(Test, pooled) %>% 
+                  mutate(fish = "pooled")
+    ) %>% 
+        mutate_at(vars(starts_with("L")), ~ format(round(., 3), nsmall = 3))
+)
+dev.off()

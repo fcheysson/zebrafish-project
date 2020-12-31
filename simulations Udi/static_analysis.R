@@ -20,13 +20,16 @@ n.sim1 = 499
 n.sim2 = 500
 n.sim = n.sim1 + n.sim2
 
-model = "Positions_20200921_withLI_f059_lowPERaNSC_02_simulation"
-simulations = 1L:16L
+model = "Positions_20200919_withLI_f059_highP132_simulation"
+simulations = 1L:18L
 n.test = length(simulations)
 pval = tibble(simulation = numeric(n.test), 
-              L22.simult = numeric(n.test),
-              L33.simult = numeric(n.test),
-              L32.simult = numeric(n.test))
+              L22.simult2 = numeric(n.test),
+              L22.simult6 = numeric(n.test),
+              L33.simult2 = numeric(n.test),
+              L33.simult6 = numeric(n.test),
+              L32.simult2 = numeric(n.test),
+              L32.simult6 = numeric(n.test))
 
 dir.create("static_images")
 
@@ -145,20 +148,27 @@ for (simulation in simulations) {
     }) %>% apply(1, mean)
     
     # Go for bivariate testing
-    Ldeviation = sapply(1:n.sim1, function(sim) {
-        max( abs(Lsim[[sim]]$pooliso - Lmean) )
+    Ldeviation = sapply(c(2.0, 6.0), function(rmax) {
+        imax = 1 + 10 * rmax
+        sapply(1:n.sim1, function(sim) {
+            max( abs(Lsim[[sim]]$pooliso[1L:imax] - Lmean[1L:imax]) )
+        })
     })
     
-    Ldeviation.sorted = sort(Ldeviation, decreasing = FALSE)
-    Ldeviation.observed = max( abs(L$pooliso - Lmean) )
-    pval$L22.simult[pval.it] = 1 - base::Position(function(bool) bool == TRUE, Ldeviation.sorted < Ldeviation.observed, right = TRUE) / (n.sim1 + 1)
+    Ldeviation.sorted = apply(Ldeviation, 2, sort, decreasing = FALSE)
+    Ldeviation.observed = sapply(c(2.0, 6.0), function(rmax) {
+        imax = 1 + 10 * rmax
+        max( abs(L$pooliso[1L:imax] - Lmean[1L:imax]) )
+    })
+    pval$L22.simult2[pval.it] = 1 - base::Position(function(bool) bool == TRUE, Ldeviation.sorted[,1] < Ldeviation.observed[1], right = TRUE) / (n.sim1 + 1)
+    pval$L22.simult6[pval.it] = 1 - base::Position(function(bool) bool == TRUE, Ldeviation.sorted[,2] < Ldeviation.observed[2], right = TRUE) / (n.sim1 + 1)
     
     EL.simultaneous = list(
         r = L$r,
         obs = L$pooliso,
         mmean = Lmean,
-        lo = Lmean - Ldeviation.sorted[ceiling((n.sim1+1) - (n.sim1+1)/20)], # 100 for alpha = 0.01
-        hi = Lmean + Ldeviation.sorted[ceiling((n.sim1+1) - (n.sim1+1)/20)]  # 100 for alpha = 0.01
+        lo = Lmean - Ldeviation.sorted[ceiling((n.sim1+1) - (n.sim1+1)/20), 2], # 100 for alpha = 0.01
+        hi = Lmean + Ldeviation.sorted[ceiling((n.sim1+1) - (n.sim1+1)/20), 2]  # 100 for alpha = 0.01
     ) %>% as_tibble()
     
     ggplot(EL.simultaneous, aes(x=r)) +
@@ -222,13 +232,20 @@ for (simulation in simulations) {
     }) %>% apply(1, mean)
     
     # Go for bivariate testing
-    Ldeviation = sapply(1:n.sim1, function(sim) {
-        max( abs(Lsim[[sim]]$pooliso - Lmean) )
+    Ldeviation = sapply(c(2.0, 6.0), function(rmax) {
+        imax = 1 + 10 * rmax
+        sapply(1:n.sim1, function(sim) {
+            max( abs(Lsim[[sim]]$pooliso[1L:imax] - Lmean[1L:imax]) )
+        })
     })
     
-    Ldeviation.sorted = sort(Ldeviation, decreasing = FALSE)
-    Ldeviation.observed = max( abs(L$pooliso - Lmean) )
-    pval$L33.simult[pval.it] = 1 - base::Position(function(bool) bool == TRUE, Ldeviation.sorted < Ldeviation.observed, right = TRUE) / (n.sim1 + 1)
+    Ldeviation.sorted = apply(Ldeviation, 2, sort, decreasing = FALSE)
+    Ldeviation.observed = sapply(c(2.0, 6.0), function(rmax) {
+        imax = 1 + 10 * rmax
+        max( abs(L$pooliso[1L:imax] - Lmean[1L:imax]) )
+    })
+    pval$L33.simult2[pval.it] = 1 - base::Position(function(bool) bool == TRUE, Ldeviation.sorted[,1] < Ldeviation.observed[1], right = TRUE) / (n.sim1 + 1)
+    pval$L33.simult6[pval.it] = 1 - base::Position(function(bool) bool == TRUE, Ldeviation.sorted[,2] < Ldeviation.observed[2], right = TRUE) / (n.sim1 + 1)
     
     EL.simultaneous = list(
         r = L$r,
@@ -302,13 +319,20 @@ for (simulation in simulations) {
     }) %>% apply(1, mean)
     
     # Go for bivariate testing
-    Ldeviation = sapply(1:n.sim1, function(sim) {
-        max( abs(Lsim[[sim]]$pooliso - Lmean) )
+    Ldeviation = sapply(c(2.0, 6.0), function(rmax) {
+        imax = 1 + 10 * rmax
+        sapply(1:n.sim1, function(sim) {
+            max( abs(Lsim[[sim]]$pooliso[1L:imax] - Lmean[1L:imax]) )
+        })
     })
     
-    Ldeviation.sorted = sort(Ldeviation, decreasing = FALSE)
-    Ldeviation.observed = max( abs(L$pooliso - Lmean) )
-    pval$L32.simult[pval.it] = 1 - base::Position(function(bool) bool == TRUE, Ldeviation.sorted < Ldeviation.observed, right = TRUE) / (n.sim1 + 1)
+    Ldeviation.sorted = apply(Ldeviation, 2, sort, decreasing = FALSE)
+    Ldeviation.observed = sapply(c(2.0, 6.0), function(rmax) {
+        imax = 1 + 10 * rmax
+        max( abs(L$pooliso[1L:imax] - Lmean[1L:imax]) )
+    })
+    pval$L32.simult2[pval.it] = 1 - base::Position(function(bool) bool == TRUE, Ldeviation.sorted[,1] < Ldeviation.observed[1], right = TRUE) / (n.sim1 + 1)
+    pval$L32.simult6[pval.it] = 1 - base::Position(function(bool) bool == TRUE, Ldeviation.sorted[,2] < Ldeviation.observed[2], right = TRUE) / (n.sim1 + 1)
     
     EL.simultaneous = list(
         r = L$r,
@@ -336,7 +360,7 @@ for (simulation in simulations) {
     
 }
 
-pdf("static_pval.pdf", height=5.5, width=4.5)
+pdf("static_pval.pdf", height=6, width=8.5)
 grid.table(
     pval %>% 
         mutate(simulation = as.character(simulation)) %>% 

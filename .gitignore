@@ -5,6 +5,9 @@
 # Session Data files
 .RData
 
+# Datasets
+*.mat
+
 # Images
 *.eps
 *.png
@@ -16,6 +19,9 @@
 *.docx
 *.html
 *.pdf
+
+# Outputs of code
+_results/
 
 # Things I don't care about
 .DS_Store
