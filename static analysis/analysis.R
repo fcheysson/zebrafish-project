@@ -9,7 +9,7 @@ library(plotly)
 library(dbmss)
 library(clue)
 
-zebra.dir = list.dirs(recursive=FALSE)[!grepl("./_images", list.dirs(recursive=FALSE))] # removes '_images' dir
+zebra.dir = list.dirs(recursive=FALSE)[!grepl("./_results", list.dirs(recursive=FALSE))] # removes '_images' dir
 imports.dir = list.dirs(zebra.dir)[!(list.dirs(zebra.dir) %in% zebra.dir)]
 imports.path = paste0(imports.dir, "/import.R")
 imports.dir = imports.dir %>% substring(2)
