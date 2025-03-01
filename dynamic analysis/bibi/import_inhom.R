@@ -82,7 +82,7 @@ Window(p) = cells.owin
 
 # Rescale to account for inhomogeneity
 rho = rhohat(p, "x")
-transf = rho %>% mutate(int = cumsum(rho)) %>% {approxfun(.$x, .$int)}
+transf = rho %>% as_tibble() %>% mutate(int = cumsum(rho)) %>% {approxfun(.$x, .$int)}
 
 cells = cells %>% mutate(dim1 = transf(dim1) * (xrange[2] - xrange[1]) / transf(xrange[2]))
 
